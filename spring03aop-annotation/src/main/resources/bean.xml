@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+    -->
+    <beans xmlns="http://www.springframework.org/schema/beans"
+           xmlns:aop="http://www.springframework.org/schema/aop"
+           xmlns:context="http://www.springframework.org/schema/context"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd">
+    <context:component-scan base-package="com.xxc"></context:component-scan>
+   <!-- AOP 配置   -->
+    <!-- 通知类 使用bean配置--> <!-- 配置事务管理器-->
+    <bean id="txManager" class="com.xxc.utils.TransactionManager">
+        <!-- 注入ConnectionUtils -->
+        <property name="connectionUtils" ref="connectionUtils"></property>
+    </bean>
+    <!--<aop:config>
+        &lt;!&ndash; 配置的代码都写在此处 &ndash;&gt;
+        <aop:aspect id="txAdvice" ref="txManager">
+            &lt;!&ndash; 配置切入点 &ndash;&gt;
+           <aop:pointcut id="pt1" expression=" execution(
+                        public void com.xxc.service.impl.AccountServiceImpl.transfer(
+                                 java.lang.String, java.lang.String, java.lang.Float)
+                               )"/>
+            &lt;!&ndash;前置通知&ndash;&gt;
+            <aop:before method="beginTransaction" pointcut-ref="pt1"></aop:before>
+            &lt;!&ndash;后置通知&ndash;&gt;
+            <aop:after-returning method="commit" pointcut-ref="pt1"></aop:after-returning>
+            &lt;!&ndash;异常通知&ndash;&gt;
+            <aop:after-throwing method="rollback" pointcut-ref="pt1"></aop:after-throwing>
+            &lt;!&ndash;最终通知&ndash;&gt;
+            <aop:after method="release" pointcut-ref="pt1"></aop:after>
+        </aop:aspect>
+    </aop:config>-->
+<!--    aop 环绕通知-->
+    <aop:config>
+        <!-- 配置的代码都写在此处 -->
+        <aop:aspect id="txAdvice" ref="txManager">
+            <!-- 配置切入点 -->
+            <aop:pointcut id="pt1" expression="execution(* com.xxc.service.impl.*.*(..))"/>
+            <!-- 环绕通知 -->
+            <aop:around method="transactionAround" pointcut-ref="pt1"></aop:around>
+        </aop:aspect>
+    </aop:config>
+
+    <!--配置代理的service-->
+<!--    <bean id="proxyAccountService" factory-bean="beanFactory" factory-method="getAccountService"></bean>-->
+
+    <!--配置beanfactory-->
+<!--    <bean id="beanFactory" class="com.xxc.factory.BeanFactory">-->
+<!--        &lt;!&ndash; 注入service &ndash;&gt;-->
+<!--        <property name="accountService" ref="accountService"></property>-->
+<!--        &lt;!&ndash; 注入事务管理器 &ndash;&gt;-->
+<!--        <property name="txManager" ref="txManager"></property>-->
+<!--    </bean>-->
+
+     <!-- 配置Service -->
+    <bean id="accountService" class="com.xxc.service.impl.AccountServiceImpl">
+        <!-- 注入dao -->
+        <property name="accountDao" ref="accountDao"></property>
+    </bean>
+
+    <!--配置Dao对象-->
+    <bean id="accountDao" class="com.xxc.dao.impl.AccountDaoImpl">
+        <!-- 注入QueryRunner -->
+        <property name="runner" ref="runner"></property>
+        <!-- 注入ConnectionUtils -->
+        <property name="connectionUtils" ref="connectionUtils"></property>
+    </bean>
+
+    <!--配置QueryRunner-->
+    <bean id="runner" class="org.apache.commons.dbutils.QueryRunner" scope="prototype"></bean>
+
+    <!-- 配置数据源 -->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <!--连接数据库的必备信息-->
+        <property name="driverClass" value="com.mysql.jdbc.Driver"></property>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/springTest?useUnicode=true&amp;characterEncoding=UTF-8"></property>
+        <property name="user" value="root"></property>
+        <property name="password" value="root"></property>
+    </bean>
+
+    <!-- 配置Connection的工具类 ConnectionUtils -->
+    <bean id="connectionUtils" class="com.xxc.utils.ConnectionUtils">
+        <!-- 注入数据源-->
+        <property name="dataSource" ref="dataSource"></property>
+    </bean>
+
+
+</beans>
